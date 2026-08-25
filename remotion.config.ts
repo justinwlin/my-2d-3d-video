@@ -12,3 +12,6 @@ Config.setRspack(true);
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
 Config.overrideBundlerConfig(enableTailwind);
+
+// Required for Three.js/WebGL rendering: https://remotion.dev/docs/three
+Config.setChromiumOpenGlRenderer("angle");
