@@ -6,7 +6,7 @@ export const MyComposition = () => {
     <Composition
       id="HybridScene"
       component={HybridScene}
-      durationInFrames={150}
+      durationInFrames={365}
       fps={30}
       width={1920}
       height={1080}

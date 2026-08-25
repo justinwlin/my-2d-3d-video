@@ -12,6 +12,17 @@ Programmatic video: 2D React/Tailwind overlays composited over a Three.js scene,
 6. **Any `<Sequence>` inside `<ThreeCanvas>` must set `layout="none"`.** Otherwise Sequence injects an absolutely-positioned div into the Three.js scene graph, which is invalid.
 7. Register compositions in `src/Composition.tsx`; `src/Root.tsx` is the entry.
 
+## Rigged models
+
+`src/OldMan.tsx` is the working reference. Four rules, each learned from a failure:
+
+1. **Seek, never advance.** Build an `AnimationMixer` once and call `mixer.setTime(frame / fps)`. Never `mixer.update(delta)` and never drei's `useAnimations` playback, both of which run on a realtime clock.
+2. **Seek in a `useLayoutEffect`, not `useEffect`.** `<ThreeCanvas>` advances the canvas in a *passive* effect, and passive effects run after layout effects. Seeking in a passive effect renders the pose one frame stale.
+3. **Gate the render on texture decode.** `useLoader` resolves when the FBX is *parsed*; `FBXLoader` then decodes embedded textures asynchronously. Without an explicit `delayRender()` held until every `texture.image` is complete, the first frame each render worker touches captures an unlit black silhouette. This shows up as N bad frames where N is the concurrency, and it is invisible in Studio.
+4. **Do not trust `Box3.setFromObject` for horizontal centering of a skinned mesh.** It bounds unposed geometry, so its X/Z center is wrong and the subject slides sideways as a camera orbits. Take height from the box, but take horizontal position from a bone (`getWorldPosition` on the rig root).
+
+Rendering a still looks correct while the full render is broken, because concurrency and worker startup only exist in the latter. Verify rigs with `npx remotion render`, not `npx remotion still`.
+
 ## Commands
 
 - `npm start` — Remotion Studio preview with frame scrubbing

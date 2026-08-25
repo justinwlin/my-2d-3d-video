@@ -1,42 +1,48 @@
+import { PerspectiveCamera } from "@react-three/drei";
 import { ThreeCanvas } from "@remotion/three";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { OldMan } from "./OldMan";
 
 export const HybridScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const { fps, width, height, durationInFrames } = useVideoConfig();
 
-  // 3D rotation driven by Remotion frame
-  const rotationY = interpolate(frame, [0, 150], [0, Math.PI * 2]);
+  // One full revolution over the composition, so the orbit loops seamlessly.
+  const orbit = interpolate(frame, [0, durationInFrames], [0, Math.PI * 2]);
 
-  // 2D UI entrance animation
   const titleScale = spring({ frame, fps, config: { damping: 12 } });
 
   return (
     <div className="relative w-full h-full bg-slate-950 flex items-center justify-center">
-      {/* 3D Scene Layer */}
-      <ThreeCanvas
-        width={width}
-        height={height}
-        camera={{ position: [0, 0, 5], fov: 60 }}
-      >
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[5, 5, 5]} />
-        <mesh rotation={[0.4, rotationY, 0]}>
-          <boxGeometry args={[2, 2, 2]} />
-          <meshStandardMaterial
-            color="#6366f1"
-            roughness={0.3}
-            metalness={0.2}
+      <ThreeCanvas width={width} height={height}>
+        {/* Orbiting the camera rather than the model keeps the lighting fixed. */}
+        <group rotation-y={orbit}>
+          <PerspectiveCamera
+            makeDefault
+            fov={40}
+            position={[0, 0.35, 3.6]}
+            rotation={[-0.1, 0, 0]}
           />
-        </mesh>
+        </group>
+
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[4, 6, 4]} intensity={2.2} />
+        <directionalLight
+          position={[-5, 2, -3]}
+          intensity={0.8}
+          color="#6366f1"
+        />
+
+        <OldMan />
       </ThreeCanvas>
 
-      {/* 2D Overlay Layer */}
       <div
         className="absolute top-16 left-16 text-white font-mono"
         style={{ transform: `scale(${titleScale})` }}
       >
-        <h1 className="text-5xl font-extrabold tracking-tight">SYSTEM HYBRID</h1>
+        <h1 className="text-5xl font-extrabold tracking-tight">
+          SYSTEM HYBRID
+        </h1>
         <p className="text-slate-400 mt-2 text-xl">Frame: {frame}</p>
       </div>
     </div>
